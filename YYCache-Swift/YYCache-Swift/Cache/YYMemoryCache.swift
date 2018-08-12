@@ -24,15 +24,15 @@ fileprivate class YYLinkedMapNode: NSObject {
 }
 
 class YYLinkedMap: NSObject {
-    fileprivate var dic: Dictionary<AnyHashable, Any>
-    private var totalCost: UInt
-    private var totalCount: UInt
+    fileprivate var dic: Dictionary<AnyHashable, YYLinkedMapNode>
+    fileprivate var totalCost: UInt
+    fileprivate var totalCount: UInt
     private var nodeArray: Array<YYLinkedMapNode>
     private var releaseOnMainThread: Bool
     private var releaseAsynchronously: Bool
     
     override init() {
-        dic = Dictionary<AnyHashable, Any>()
+        dic = Dictionary<AnyHashable, YYLinkedMapNode>()
         totalCost = 0
         totalCount = 0
         nodeArray = Array<YYLinkedMapNode>()
@@ -122,6 +122,10 @@ class YYMemoryCache: NSObject {
         releaseOnMainThread = true
         releaseAsynchronously = true
         
+        
+        lock = pthread_mutex_t.init()
+        lru = YYLinkedMap.init()
+        queue = DispatchQueue.init(label: "com.hobi.yycache")
         super.init()
         
     }
@@ -139,36 +143,96 @@ extension YYMemoryCache {
     
     func object(forKey key: AnyHashable) -> Any? {
         pthread_mutex_lock(&lock)
-        var node: YYLinkedMapNode = lru.dic[key]
-        if node
+        if let node: YYLinkedMapNode = lru.dic[key] {
+            node.time = CACurrentMediaTime()
+            lru.bringNodeToHead(node)
+            pthread_mutex_unlock(&lock)
+            return node.value
+        } else {
+            pthread_mutex_unlock(&lock)
+            return nil
+        }
+    }
+    
+    func setObject(_ object: Any?, forKey key: AnyHashable) {
+        setObject(object, forKey: key, withCost: 0)
+    }
+    
+    func setObject(_ object: Any?, forKey key: AnyHashable, withCost cost: UInt) -> Void {
+        
+        if let obj: Any = object {
+            pthread_mutex_lock(&lock)
+            if let node: YYLinkedMapNode = lru.dic[key] {
+                lru.totalCost = lru.totalCost - node.cost
+                lru.totalCost = lru.totalCost + cost
+                node.cost = cost
+                node.time = CACurrentMediaTime()
+                node.value = obj
+                lru .bringNodeToHead(node)
+            } else {
+                let newNode: YYLinkedMapNode = YYLinkedMapNode.init(key, obj, cost, CACurrentMediaTime())
+                lru.insertNodeAtHead(newNode)
+            }
+            if lru.totalCost > costLimit {
+                queue.async {
+                    self.trim(toCost: self.costLimit)
+                }
+            }
+            if lru.totalCount > costLimit {
+                lru.removeTailNode()
+            }
+            pthread_mutex_unlock(&lock)
+        } else {
+            removeObject(forKey: key)
+            return
+        }
+        
+    }
+    
+    func removeObject(forKey key: AnyHashable) -> Void {
+        pthread_mutex_lock(&lock)
+        if let node: YYLinkedMapNode = lru.dic[key] {
+            lru .removeNode(node)
+        }
         pthread_mutex_unlock(&lock)
     }
     
-    func setObject(_ object: Any?, forKey key: Any) {
-        
-    }
-    
-    func setObject(_ object: Any?, forKey key: Any, withCost cost: UInt) -> Void {
-        
-    }
-    
-    func removeObject(forKey key: Any) -> Void {
-        
-    }
-    
     func removeAllObjects() {
-        
+        pthread_mutex_lock(&lock)
+        lru.removeAll()
+        pthread_mutex_unlock(&lock)
     }
 }
 
 // MARK: Trim
 extension YYMemoryCache {
     func trim(toCount count:UInt) {
-        
+
+        if count == 0 {
+            removeAllObjects()
+        } else if lru.totalCount <= count {
+            return
+        } else {
+            while lru.totalCount > count {
+                pthread_mutex_lock(&lock)
+                lru.removeTailNode()
+                pthread_mutex_unlock(&lock)
+            }
+        }
     }
     
     func trim(toCost cost:UInt) {
-        
+        if cost == 0 {
+            removeAllObjects()
+        } else if lru.totalCost <= cost {
+            return
+        } else {
+            while lru.totalCost > cost {
+                pthread_mutex_lock(&lock)
+                lru.removeTailNode()
+                pthread_mutex_unlock(&lock)
+            }
+        }
     }
     
     func trim(toAge age:TimeInterval) {

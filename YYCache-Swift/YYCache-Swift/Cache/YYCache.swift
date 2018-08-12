@@ -21,9 +21,6 @@ class YYCache: NSObject {
         totalCount = 0
         totalCost = 0
         
-        lock = pthread_mutex_t.init()
-        lru = YYLinkedMap.init()
-        queue = DispatchQueue.init(label: "com.hobi.yycache")
         super.init()
     }
 }
