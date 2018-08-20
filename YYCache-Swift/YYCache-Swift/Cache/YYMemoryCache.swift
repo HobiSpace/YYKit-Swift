@@ -84,56 +84,64 @@ class YYLinkedMap: NSObject {
     
 }
 
-class YYMemoryCache: NSObject {
+class YYMemoryCache: NSObject, YYCacheProtocol {
     var name: String
-    private(set) var totalCount: UInt
-    private(set) var totalCost: UInt
+    
+    var totalCount: UInt
+    
+    var totalCost: UInt
+    
+    var countLimit: UInt
+    
+    var costLimit: UInt
+    
+    var ageLimit: TimeInterval
+    
+    var autoTrimInterval: TimeInterval
+    
     
     private var lock: pthread_mutex_t
     private var lru: YYLinkedMap
     private var queue: DispatchQueue
     
-    // Limit
-    var countLimit: UInt
-    var costLimit: UInt
-    var ageLimit: TimeInterval
-    var autoTrimInterval: TimeInterval
+
     var shouldRemoveAllObjectsOnMemoryWarning: Bool
     var shouldRemoveAllObjectsWhenEnteringBackground: Bool
-    
+
     var didReceiveMemoryWarningBlock: ((YYMemoryCache)->())?
     var didEnterBackgroundBlock: ((YYMemoryCache)->())?
-    
+
     var releaseOnMainThread: Bool
     var releaseAsynchronously: Bool
-    
+
     override init() {
         name = String.init()
         totalCount = 0
         totalCost = 0
-        countLimit = 0
-        costLimit = 0
-        ageLimit = 0
-        autoTrimInterval = 0
+        countLimit = UInt.max
+        costLimit = UInt.max
+        ageLimit = Double.greatestFiniteMagnitude
+        autoTrimInterval = 5.0
         shouldRemoveAllObjectsOnMemoryWarning = true
         shouldRemoveAllObjectsWhenEnteringBackground = true
         didReceiveMemoryWarningBlock = nil
         didEnterBackgroundBlock = nil
         releaseOnMainThread = true
         releaseAsynchronously = true
-        
-        
+
+
         lock = pthread_mutex_t.init()
         lru = YYLinkedMap.init()
         queue = DispatchQueue.init(label: "com.hobi.yycache")
         super.init()
-        
+
     }
 }
 
 
 // MARK: - Access Methods
 extension YYMemoryCache {
+    
     func containsObject(forKey key: AnyHashable) -> Bool {
         pthread_mutex_lock(&lock)
         let contains = lru.dic[key] != nil
@@ -158,8 +166,7 @@ extension YYMemoryCache {
         setObject(object, forKey: key, withCost: 0)
     }
     
-    func setObject(_ object: Any?, forKey key: AnyHashable, withCost cost: UInt) -> Void {
-        
+    func setObject(_ object: Any?, forKey key: AnyHashable, withCost cost: UInt) {
         if let obj: Any = object {
             pthread_mutex_lock(&lock)
             if let node: YYLinkedMapNode = lru.dic[key] {
@@ -186,10 +193,9 @@ extension YYMemoryCache {
             removeObject(forKey: key)
             return
         }
-        
     }
     
-    func removeObject(forKey key: AnyHashable) -> Void {
+    func removeObject(forKey key: AnyHashable) {
         pthread_mutex_lock(&lock)
         if let node: YYLinkedMapNode = lru.dic[key] {
             lru .removeNode(node)
@@ -206,8 +212,8 @@ extension YYMemoryCache {
 
 // MARK: Trim
 extension YYMemoryCache {
-    func trim(toCount count:UInt) {
-
+    
+    func trim(toCount count: UInt) {
         if count == 0 {
             removeAllObjects()
         } else if lru.totalCount <= count {
@@ -221,7 +227,7 @@ extension YYMemoryCache {
         }
     }
     
-    func trim(toCost cost:UInt) {
+    func trim(toCost cost: UInt) {
         if cost == 0 {
             removeAllObjects()
         } else if lru.totalCost <= cost {
@@ -235,7 +241,7 @@ extension YYMemoryCache {
         }
     }
     
-    func trim(toAge age:TimeInterval) {
+    func trim(toAge age: TimeInterval) {
         
     }
 }

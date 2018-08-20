@@ -17,6 +17,7 @@
 		87447E77210DA70B00B76425 /* YYCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87447E76210DA70B00B76425 /* YYCache.swift */; };
 		87447E79210DA71D00B76425 /* YYMemoryCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87447E78210DA71D00B76425 /* YYMemoryCache.swift */; };
 		87447E7B210DA72C00B76425 /* YYDiskCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87447E7A210DA72C00B76425 /* YYDiskCache.swift */; };
+		C6EF8B172126E62000D28B2E /* YYKVStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6EF8B162126E62000D28B2E /* YYKVStorage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,7 @@
 		87447E76210DA70B00B76425 /* YYCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YYCache.swift; sourceTree = "<group>"; };
 		87447E78210DA71D00B76425 /* YYMemoryCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YYMemoryCache.swift; sourceTree = "<group>"; };
 		87447E7A210DA72C00B76425 /* YYDiskCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YYDiskCache.swift; sourceTree = "<group>"; };
+		C6EF8B162126E62000D28B2E /* YYKVStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YYKVStorage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +140,7 @@
 				87447E76210DA70B00B76425 /* YYCache.swift */,
 				87447E78210DA71D00B76425 /* YYMemoryCache.swift */,
 				87447E7A210DA72C00B76425 /* YYDiskCache.swift */,
+				C6EF8B162126E62000D28B2E /* YYKVStorage.swift */,
 			);
 			path = Cache;
 			sourceTree = "<group>";
@@ -277,6 +280,7 @@
 				87447E79210DA71D00B76425 /* YYMemoryCache.swift in Sources */,
 				87447E48210DA6A700B76425 /* ViewController.swift in Sources */,
 				87447E7B210DA72C00B76425 /* YYDiskCache.swift in Sources */,
+				C6EF8B172126E62000D28B2E /* YYKVStorage.swift in Sources */,
 				87447E46210DA6A700B76425 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
