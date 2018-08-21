@@ -52,16 +52,21 @@ class YYKVStorage: NSObject {
 // MARK: - Save Items
 extension YYKVStorage {
     func saveItem(_ item: YYKVStorageItem) -> Bool {
-        return true
+        return saveItem(forKey: item.key, value: item.value, fileName: item.fileName, extendedData: item.extendedData)
     }
     
-    func saveItem(withKey key: String, _ value: Data) -> Bool {
-        
+    func saveItem(forKey key: String, value: Data) -> Bool {
+        return saveItem(forKey: key, value: value, fileName: nil, extendedData: nil)
     }
     
-    func saveItem(withKey key: String, _ value: Data, _ fileName: String?, _ extendedData: Data?) -> Bool {
-        guard value.count else {
-            <#statements#>
+    func saveItem(forKey key: String, value: Data, fileName: String?, extendedData: Data?) -> Bool {
+        guard key.count != 0 || value.count != 0 else {
+            return false
         }
+        
+        if type == .File && fileName?.count == 0 {
+            return false
+        }
+        
     }
 }
